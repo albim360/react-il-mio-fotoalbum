@@ -32,6 +32,7 @@ model User {
   username String
   email    String
   photos   Photo[]
+  role     String  @default("user")
 }
 
 model ContactMessage {

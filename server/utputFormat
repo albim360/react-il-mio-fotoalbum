@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Access-Control-Allow-Origin: *
+Content-Type: application/json; charset=utf-8
+Content-Length: 160
+ETag: W/"a0-ylMfWvmBTapGAEm1ErUQcZwS+H0"
+Date: Thu, 14 Dec 2023 16:41:06 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+[{"id":1,"name":"Paesaggi"},{"id":2,"name":"Animali"},{"id":3,"name":"Ritratti"},{"id":4,"name":"Architettura"},{"id":5,"name":"Cibo"},{"id":6,"name":"Viaggi"}]

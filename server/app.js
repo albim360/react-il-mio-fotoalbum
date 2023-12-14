@@ -1,23 +1,23 @@
 const express = require('express');
 const cors = require('cors');
-const app = express();
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
 const authRoutes = require('./routes/authRoutes');
+const photoRoutes = require('./routes/photoRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+
+const app = express();
+const prisma = new PrismaClient();
+
+
 
 app.use(cors());
 app.use(express.static('public'));
-
-// Middleware per l'analisi del corpo delle richieste in formato JSON
 app.use(express.json());
 
-// // Rotte per i post
-// app.use('/', routes);
-
-// Rotte per l'autenticazione
 app.use('/', authRoutes);
+app.use('/photos', photoRoutes);
+app.use('/categories', categoryRoutes);
 
-// Route di base per la radice
 app.get('/', (req, res) => {
   res.send('Benvenuto nel mio server Express!');
 });
