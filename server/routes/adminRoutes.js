@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const isAdmin = require('../middlewares/isAdmin');
 require('dotenv').config();
 
+
 const router = express.Router();
 const prisma = new PrismaClient();
 
@@ -15,6 +16,8 @@ const authenticateUser = async (req, res, next) => {
   if (!token) {
     return res.status(401).json({ error: 'Token non fornito. Accesso non autorizzato.' });
   }
+
+  console.log('Token:', token);
 
   try {
     // Verifica e decodifica il token

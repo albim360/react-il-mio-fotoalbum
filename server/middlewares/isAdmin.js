@@ -6,10 +6,10 @@ const isAdmin = async (req, res, next) => {
 
   try {
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId, isAdmin: true }, 
     });
 
-    if (!user || !user.isAdmin) {
+    if (!user) {
       console.error("Access denied. User:", user);
       return res.status(403).json({ error: 'Accesso non autorizzato. Solo gli amministratori possono accedere.' });
     }
