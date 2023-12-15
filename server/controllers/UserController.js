@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { $executeRaw } = new PrismaClient();
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const prisma = new PrismaClient();
 
@@ -13,7 +14,7 @@ class UserController {
 
             // Verifica se l'utente esiste già
             const existingUser = await prisma.user.findUnique({
-                where: { email },
+                where: { email: email }, 
             });
 
             if (existingUser) {
@@ -66,8 +67,11 @@ class UserController {
                 return res.status(401).json({ error: 'Credenziali non valide.' });
             }
 
-            // Autenticazione riuscita
-            res.json({ message: 'Accesso effettuato con successo!' });
+            // Genera il token JWT
+            const token = jwt.sign({ userId: existingUser.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+            // Invia il token come risposta
+            res.json({ token });
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: 'Errore durante l\'accesso dell\'utente.' });
