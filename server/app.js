@@ -4,6 +4,7 @@ const { PrismaClient } = require('@prisma/client');
 const authRoutes = require('./routes/authRoutes');
 const photoRoutes = require('./routes/photoRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 const prisma = new PrismaClient();
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(express.static('public'));
 app.use(express.json());
 
+app.use('/admin', adminRoutes);
 app.use('/', authRoutes);
 app.use('/photos', photoRoutes);
 app.use('/categories', categoryRoutes);
