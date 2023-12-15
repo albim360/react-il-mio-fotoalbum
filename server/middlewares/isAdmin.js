@@ -1,13 +1,15 @@
-// Middleware per verificare se l'utente è un amministratore
-const isAdmin = (req, res, next) => {
-    if (req.user && req.user.role === 'admin') {
-      next(); 
-    } else {
-      res.status(403).json({ error: 'Accesso negato. Solo gli amministratori possono eseguire questa azione.' });
+const isAdmin = async (req, res, next) => {
+  const userId = req.userId; 
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({ error: 'Accesso non autorizzato. Solo gli amministratori possono accedere.' });
     }
-  };
-  
-  router.post('/make-admin', isAdmin, async (req, res) => {
-    
-  });
-  
+    next();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Errore nella verifica dell\'autorizzazione.' });
+  }
+};

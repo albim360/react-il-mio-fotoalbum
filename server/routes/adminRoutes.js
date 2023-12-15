@@ -2,26 +2,37 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
+const { isAdmin } = require('../middlewares/isAdmin');
 
 // Middleware di autorizzazione
-const isAdmin = async (req, res, next) => {
-  const userId = req.userId; 
+const authenticateUser = async (req, res, next) => {
+  // Estrarre e verificare il token JWT dall'header della richiesta o da un cookie
+  const token = req.header('Authorization');
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token non fornito. Accesso non autorizzato.' });
+  }
+
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user || !user.isAdmin) {
-      return res.status(403).json({ error: 'Accesso non autorizzato. Solo gli amministratori possono accedere.' });
-    }
+    // Verifica e decodifica il token
+    const decoded = jwt.verify(token, ''); 
+
+    // Imposta l'ID dell'utente nella richiesta
+    req.userId = decoded.userId;
+
+    // Passa alla successiva funzione nel middleware
     next();
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Errore nella verifica dell\'autorizzazione.' });
+    res.status(401).json({ error: 'Token non valido. Accesso non autorizzato.' });
   }
 };
 
+// Applica il middleware di autenticazione a tutte le rotte che richiedono l'utente autenticato
+router.use(authenticateUser);
+
 // Rotta per assegnare il ruolo di admin a un utente
-router.post('/make-admin/:userId', isAdmin, async (req, res) => {
+router.put('/make-admin/:userId', isAdmin, async (req, res) => {
   const { userId } = req.params;
   try {
     await prisma.user.update({
@@ -36,7 +47,7 @@ router.post('/make-admin/:userId', isAdmin, async (req, res) => {
 });
 
 // Rotta per rimuovere il ruolo di admin da un utente
-router.post('/remove-admin/:userId', isAdmin, async (req, res) => {
+router.put('/remove-admin/:userId', isAdmin, async (req, res) => {
     const { userId } = req.params;
     try {
       await prisma.user.update({
@@ -49,6 +60,5 @@ router.post('/remove-admin/:userId', isAdmin, async (req, res) => {
       res.status(500).json({ error: 'Errore durante la rimozione del ruolo di admin.' });
     }
   });
-
 
 module.exports = router;
