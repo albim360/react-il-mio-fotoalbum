@@ -29,8 +29,9 @@ model Category {
 
 model User {
   id       Int     @id @default(autoincrement())
-  username String
-  email    String
+  username String  @unique
+  email    String  @unique
+  password String
   photos   Photo[]
   role     String  @default("user")
 }
