@@ -14,6 +14,7 @@ const authenticateUser = async (req, res, next) => {
   const token = req.header('Authorization');
 
   if (!token) {
+    console.log('Token non fornito. Accesso non autorizzato.');
     return res.status(401).json({ error: 'Token non fornito. Accesso non autorizzato.' });
   }
 
@@ -21,7 +22,7 @@ const authenticateUser = async (req, res, next) => {
 
   try {
     // Verifica e decodifica il token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token.split(' ')[1], process.env.JWT_SECRET);
 
     console.log('Decoded token:', decoded);
 
@@ -32,6 +33,7 @@ const authenticateUser = async (req, res, next) => {
 
     // Verifica se l'utente esiste e passa all'utente successivo nel middleware
     if (!user) {
+      console.log('Utente non trovato con l\'ID presente nel token.');
       return res.status(401).json({ error: 'Utente non trovato. Accesso non autorizzato.' });
     }
 
@@ -41,12 +43,13 @@ const authenticateUser = async (req, res, next) => {
     // Passa alla successiva funzione nel middleware
     next();
   } catch (error) {
-    console.error(error);
+    console.error('Errore durante la verifica del token:', error);
     res.status(401).json({ error: 'Token non valido. Accesso non autorizzato.' });
   }
 };
 
-// Rotta di login o autenticazione dove puoi utilizzare jwt.sign()
+
+// Rotta di login o autenticazione // jwt.sign()
 router.post('/login', async (req, res) => {
   // Effettua l'autenticazione dell'utente e genera un token JWT se l'autenticazione è riuscita
   const user = await prisma.user.findUnique({
@@ -72,8 +75,12 @@ router.put('/make-admin/:userId', isAdmin, async (req, res) => {
   const { userId } = req.params;
   try {
     await prisma.user.update({
-      where: { id: parseInt(userId, 10) },
-      data: { isAdmin: true },
+      where: {
+        id: parseInt(userId, 10),
+      },
+      data: {
+        role: 'admin', 
+      },
     });
     res.json({ message: 'L\'utente è stato promosso a amministratore.' });
   } catch (error) {
@@ -82,13 +89,18 @@ router.put('/make-admin/:userId', isAdmin, async (req, res) => {
   }
 });
 
+
 // Rotta per rimuovere il ruolo di admin da un utente
 router.put('/remove-admin/:userId', isAdmin, async (req, res) => {
   const { userId } = req.params;
   try {
     await prisma.user.update({
-      where: { id: parseInt(userId, 10) },
-      data: { isAdmin: false },
+      where: {
+        id: parseInt(userId, 10),
+      },
+      data: {
+        role: 'user', 
+      },
     });
     res.json({ message: 'L\'utente è stato rimosso dall\'amministratore.' });
   } catch (error) {
@@ -96,5 +108,6 @@ router.put('/remove-admin/:userId', isAdmin, async (req, res) => {
     res.status(500).json({ error: 'Errore durante la rimozione del ruolo di admin.' });
   }
 });
+
 
 module.exports = router;

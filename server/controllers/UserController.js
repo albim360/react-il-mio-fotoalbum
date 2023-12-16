@@ -1,5 +1,4 @@
 const { PrismaClient } = require('@prisma/client');
-const { $executeRaw } = new PrismaClient();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -14,10 +13,11 @@ class UserController {
 
             // Verifica se l'utente esiste già
             const existingUser = await prisma.user.findUnique({
-                where: { email: email }, 
+                where: { email: email },
             });
 
             if (existingUser) {
+                console.log('Utente già registrato con questa email.');
                 return res.status(400).json({ error: 'Utente già registrato con questa email.' });
             }
 
@@ -36,7 +36,7 @@ class UserController {
             console.log('Fine registrazione utente. Nessun errore.');
             res.status(201).json(newUser);
         } catch (error) {
-            console.error(error);
+            console.error('Errore durante la registrazione:', error);
 
             if (error.code === 'P2002') {
                 console.log('Errore di duplicazione di chiave univoca.');
@@ -47,6 +47,7 @@ class UserController {
             res.status(500).json({ error: 'Errore durante la registrazione dell\'utente.' });
         }
     }
+
     static async signin(req, res) {
         const { email, password } = req.body;
 
@@ -57,6 +58,7 @@ class UserController {
             });
 
             if (!existingUser) {
+                console.log('Utente non trovato con questa email.');
                 return res.status(401).json({ error: 'Credenziali non valide.' });
             }
 
@@ -64,6 +66,7 @@ class UserController {
             const passwordMatch = await bcrypt.compare(password, existingUser.password);
 
             if (!passwordMatch) {
+                console.log('Password non corrispondente.');
                 return res.status(401).json({ error: 'Credenziali non valide.' });
             }
 
@@ -73,7 +76,7 @@ class UserController {
             // Invia il token come risposta
             res.json({ token });
         } catch (error) {
-            console.error(error);
+            console.error('Errore durante l\'accesso:', error);
             res.status(500).json({ error: 'Errore durante l\'accesso dell\'utente.' });
         }
     }
