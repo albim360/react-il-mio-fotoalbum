@@ -1,4 +1,5 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const authRoutes = require('./routes/authRoutes');
@@ -9,7 +10,8 @@ const adminRoutes = require('./routes/adminRoutes');
 const app = express();
 const prisma = new PrismaClient();
 
-
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cors());
 app.use(express.static('public'));

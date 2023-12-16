@@ -17,7 +17,7 @@ model Photo {
   image       String
   visible     Boolean
   categories  Category[]
-  userId      Int?
+  userId      Int?      
   user        User?      @relation(fields: [userId], references: [id])
 }
 

@@ -6,18 +6,23 @@ const prisma = new PrismaClient();
 // Creazione di una nuova foto
 router.post('/', async (req, res) => {
   try {
+    const categoriesToConnect = Array.isArray(req.body.categories) 
+    ? req.body.categories 
+    : [];
+
     await prisma.photo.create({
-      data: {
-        title: req.body.title,
-        description: req.body.description,
-        image: req.body.image,
-        visible: req.body.visible,
-        categories: {
-          connect: req.body.categories.map(categoryId => ({ id: categoryId })),
-        },
-        userId: req.body.userId,
-      }
+        data: {
+            title: req.body.title,
+            description: req.body.description,
+            image: req.body.image,
+            visible: req.body.visible,
+            categories: {
+                connect: categoriesToConnect.map(categoryId => ({ id: categoryId })),
+            },
+            userId: req.body.userId,
+        }
     });
+    
 
     // Rispondi con successo
     res.json({ success: true });
@@ -26,6 +31,7 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Errore nella creazione della foto.', details: error.message });
   }
 });
+
 
 
 // Lettura di tutte le foto
