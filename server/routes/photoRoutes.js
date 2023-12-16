@@ -2,6 +2,8 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
+const isAdmin = require('../middlewares/isAdmin');
+const isUserPhoto = require('../middlewares/isUserPhoto');
 
 // Creazione di una nuova foto
 router.post('/', async (req, res) => {
@@ -10,37 +12,33 @@ router.post('/', async (req, res) => {
     ? req.body.categories 
     : [];
 
-    await prisma.photo.create({
-        data: {
-            title: req.body.title,
-            description: req.body.description,
-            image: req.body.image,
-            visible: req.body.visible,
-            categories: {
-                connect: categoriesToConnect.map(categoryId => ({ id: categoryId })),
-            },
-            userId: req.body.userId,
-        }
+    const newPhoto = await prisma.photo.create({
+      data: {
+        title: req.body.title,
+        description: req.body.description,
+        image: req.body.image,
+        visible: req.user?.role === 'admin' ? req.body.visible : false,
+        categories: {
+          connect: categoriesToConnect.map(categoryId => ({ id: categoryId })),
+        },
+        userId: req.body.userId,
+      }
     });
     
-
-    // Rispondi con successo
-    res.json({ success: true });
+    // Rispondi con la nuova foto creata
+    res.json(newPhoto);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Errore nella creazione della foto.', details: error.message });
   }
 });
 
-
-
-// Lettura di tutte le foto
-router.get('/', async (req, res) => {
+// Lettura di tutte le foto per l'amministratore
+router.get('/admin', isAdmin, async (req, res) => {
   try {
     const allPhotos = await prisma.photo.findMany({
       include: { categories: true, user: true },
     });
-
     res.json(allPhotos);
   } catch (error) {
     console.error(error);
@@ -48,29 +46,26 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Lettura di una singola foto
-router.get('/:id', async (req, res) => {
+// Lettura di tutte le foto per gli utenti non amministratori
+router.get('/', async (req, res) => {
   try {
-    const photoId = parseInt(req.params.id);
-
-    const photo = await prisma.photo.findUnique({
-      where: { id: photoId },
+    const user = req.user;
+    const userPhotos = await prisma.photo.findMany({
+      where: {
+        userId: user?.id,
+        visible: true,
+      },
       include: { categories: true, user: true },
     });
-
-    if (!photo) {
-      return res.status(404).json({ error: 'Foto non trovata.' });
-    }
-
-    res.json(photo);
+    res.json(userPhotos);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Errore nella lettura della foto.' });
+    res.status(500).json({ error: 'Errore nella lettura delle foto.' });
   }
 });
 
 // Aggiornamento di una foto
-router.put('/:id', async (req, res) => {
+router.put('/:id', isAdmin, isUserPhoto, async (req, res) => {
   try {
     const photoId = parseInt(req.params.id);
 
@@ -102,9 +97,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-
 // Eliminazione di una foto
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', isAdmin, isUserPhoto, async (req, res) => {
   try {
     const photoId = parseInt(req.params.id);
 
@@ -117,10 +111,6 @@ router.delete('/:id', async (req, res) => {
     console.error(error);
     res.status(500).json({ error: 'Errore nella cancellazione della foto.' });
   }
-});
-
-process.on('beforeExit', () => {
-  prisma.$disconnect();
 });
 
 module.exports = router;

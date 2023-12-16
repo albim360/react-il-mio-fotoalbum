@@ -72,6 +72,7 @@ class UserController {
 
             // Genera il token JWT
             const token = jwt.sign({ userId: existingUser.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            console.log("Generated token:", token);
 
             // Invia il token come risposta
             res.json({ token });
