@@ -81,6 +81,26 @@ class UserController {
             res.status(500).json({ error: 'Errore durante l\'accesso dell\'utente.' });
         }
     }
+
+    static async getAuthenticatedUser(req, res) {
+        const userId = req.user.userId; // Dovrebbe contenere l'ID dell'utente estratto dal token JWT
+
+        try {
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+            });
+
+            if (!user) {
+                console.log('Utente non trovato.');
+                return res.status(404).json({ error: 'Utente non trovato.' });
+            }
+
+            res.json({ user });
+        } catch (error) {
+            console.error('Errore nel recupero dell\'utente autenticato:', error);
+            res.status(500).json({ error: 'Errore nel recupero dell\'utente autenticato.' });
+        }
+    }
 }
 
 module.exports = UserController;

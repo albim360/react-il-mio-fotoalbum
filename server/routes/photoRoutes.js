@@ -46,6 +46,23 @@ router.get('/admin', isAdmin, async (req, res) => {
   }
 });
 
+// Lettura di tutte le foto visibili
+router.get('/visible', async (req, res) => {
+  try {
+    const visiblePhotos = await prisma.photo.findMany({
+      where: {
+        visible: true,
+      },
+      include: { categories: true, user: true },
+    });
+    res.json(visiblePhotos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Errore nella lettura delle foto visibili.' });
+  }
+});
+
+
 // Lettura di tutte le foto per gli utenti non amministratori
 router.get('/', async (req, res) => {
   try {
